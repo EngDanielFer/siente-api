@@ -81,7 +81,7 @@ class StockController
                 }
             }
 
-            Response::serverError('Error al procesar el stock');
+            Response::serverError('Error al procesar el stock: ' . $msg);
         }
 
         Response::success([
