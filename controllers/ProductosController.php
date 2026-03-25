@@ -185,6 +185,9 @@ class ProductosController
 
         $insumosJson = json_encode($body['insumos'] ?? []);
 
+        $porcentajeMayor = isset($body['porcentaje_ganancia_mayor']) ? (float)$body['porcentaje_ganancia_mayor'] : 30.0;
+        $porcentajeDetal  = isset($body['porcentaje_ganancia_detal'])  ? (float)$body['porcentaje_ganancia_detal']  : 50.0;
+
         try {
             $stmt = $this->db->prepare('CALL p_insertar_producto_insumos(
                 :prod_id, :prod_nombre, :prod_descripcion, :prod_peso, :prod_imagen, :prod_insumos,
@@ -192,7 +195,7 @@ class ProductosController
                 :prod_costo_internet, :prod_costo_mano_obra, :prod_comentario_mano_obra,
                 :prod_costo_transporte, :prod_costo_perdidas, :prod_costo_herramientas,
                 :prod_costo_mark_redes, :prod_costo_mark_disenador, :prod_costo_admin,
-                :prod_costo_etiqueta
+                :prod_costo_etiqueta, :porcentaje_mayor, :porcentaje_detal
             )');
 
             $stmt->bindValue(':prod_id', $body['id'] ?? null, PDO::PARAM_INT);
@@ -214,7 +217,9 @@ class ProductosController
             $stmt->bindValue(':prod_costo_mark_redes', $body['costo_mark_redes'] ?? 0);
             $stmt->bindValue(':prod_costo_mark_disenador', $body['costo_mark_disenador'] ?? 0);
             $stmt->bindValue(':prod_costo_admin', $body['costo_admin'] ?? 0);
-            $stmt->bindValue(':prod_costo_etiqueta', $body['costo_etiqueta'] ?? 0);
+            $stmt->bindValue(':prod_costo_etiqueta', 0);
+            $stmt->bindValue(':porcentaje_mayor', $porcentajeMayor);
+            $stmt->bindValue(':porcentaje_detal', $porcentajeDetal);
 
             $stmt->execute();
         } catch (PDOException $e) {

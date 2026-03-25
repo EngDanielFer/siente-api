@@ -19,6 +19,12 @@ class Database
             $user = getenv('DB_USERNAME') ?: 'u797242175_danielf';
             $pass = getenv('DB_PASSWORD') ?: 'IngSis9501';
 
+            // $host = getenv('DB_HOST') ?: 'localhost';
+            // $port = getenv('DB_PORT') ?: '3306';
+            // $name = getenv('DB_NAME') ?: 'siente-prueba';
+            // $user = getenv('DB_USERNAME') ?: 'root';
+            // $pass = getenv('DB_PASSWORD') ?: '';
+
             $dsn = "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4";
 
             $options = [
