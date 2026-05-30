@@ -7,6 +7,7 @@
  * GET  /api/siente/facturas/{id} → getById
  * GET  /api/siente/facturas/email/{email} → getByEmail
  * POST /api/siente/facturas → create (usa SP p_insertar_factura)
+ * DELETE /api/siente/facturas/{id} → delete
  */
 
 declare(strict_types=1);
@@ -184,6 +185,30 @@ class FacturasController
             'valor_pagado' => $factura['valor_pagado'] ?? null,
             'precio_envio' => $factura['precio_envio'] ?? null,
         ]);
+    }
+
+    public function delete(int $id): void
+    {
+        $stmt = $this->db->prepare('SELECT id FROM facturas WHERE id = ?');
+        $stmt->execute([$id]);
+
+        if (!$stmt->fetch()) {
+            Response::notFound("No se ha encontrado la factura con ID: {$id}");
+        }
+
+        try {
+            // Eliminar detalle primero
+            $stmtDetalle = $this->db->prepare('DELETE FROM factura_detalle WHERE id_factura = ?');
+            $stmtDetalle->execute([$id]);
+
+            //Eliminar la factura
+            $stmtFactura = $this->db->prepare('DELETE FROM facturas WHERE id = ?');
+            $stmtFactura->execute([$id]);
+        } catch (PDOException $e) {
+            Response::serverError('Error al eliminar factura: ' . $e->getMessage());
+        }
+
+        Response::success(['mensaje' => 'Factura eliminada exitosamente', 'id' => $id]);
     }
 
     private function mapFactura(array $row): array

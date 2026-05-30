@@ -209,6 +209,8 @@ if ($modulo === 'siente') {
             } elseif (is_numeric($id)) {
                 if ($method === 'GET') {
                     $ctrl->getById((int)$id);
+                } elseif ($method === 'DELETE') {
+                    $ctrl->delete((int)$id);
                 } else {
                     Response::methodNotAllowed();
                 }
