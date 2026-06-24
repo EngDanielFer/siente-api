@@ -107,6 +107,8 @@ class ProductosController
             'costo_mark_disenador' => (float)($costos['costo_marketing_disenador'] ?? 0),
             'costo_admin' => (float)($costos['costo_admin'] ?? 0),
             'costo_etiqueta' => (float)($costos['costo_etiqueta'] ?? 0),
+            'porcentaje_ganancia_mayor' => isset($producto['porcentaje_ganancia_mayor']) ? (float)$producto['porcentaje_ganancia_mayor'] : null,
+            'porcentaje_ganancia_detal' => isset($producto['porcentaje_ganancia_detal']) ? (float)$producto['porcentaje_ganancia_detal'] : null,
         ];
 
         Response::success($dto);

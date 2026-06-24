@@ -172,6 +172,16 @@ class FacturasController
             Response::serverError('Error al crear la factura: ' . $e->getMessage());
         }
 
+        foreach ($productos as $p) {
+            $idProd = (int)$p['id_producto'];
+            $cantProd = (int)$p['cantidad_producto'];
+
+            $ok = StockController::descontarStockFIFO($this->db, $idProd, $cantProd);
+            if (!$ok) {
+                error_log("FIFO: stock insuficiente en lotes para producto {$idProd} (cantidad {$cantProd})");
+            }
+        }
+
         $stmtF = $this->db->prepare(
             'SELECT valor_total, valor_pagado, precio_envio FROM facturas WHERE id = ?'
         );

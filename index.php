@@ -183,6 +183,14 @@ if ($modulo === 'siente') {
                 } else {
                     Response::methodNotAllowed();
                 }
+            } elseif (is_numeric($id)) {
+                if ($method === 'PUT') {
+                    $ctrl->update((int)$id);
+                } elseif($method === 'DELETE') {
+                    $ctrl->delete((int)$id);
+                } else {
+                    Response::methodNotAllowed();
+                }
             } else {
                 Response::notFound('Ruta de stock no encontrada');
             }
