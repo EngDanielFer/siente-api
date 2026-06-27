@@ -193,7 +193,7 @@ if ($modulo === 'siente') {
                 if ($method === 'GET') {
                     $ctrl->getLowStock();
                 } else {
-                    Response::methodNotAllowed()
+                    Response::methodNotAllowed();
                 }
             } elseif (is_numeric($id)) {
                 if ($method === 'PUT') {
