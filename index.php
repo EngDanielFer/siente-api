@@ -189,7 +189,7 @@ if ($modulo === 'siente') {
                 } else {
                     Response::methodNotAllowed();
                 }
-            } elseif ($id ==='baho-stock') {
+            } elseif ($id ==='bajo-stock') {
                 if ($method === 'GET') {
                     $ctrl->getLowStock();
                 } else {
