@@ -4,6 +4,7 @@
  * InsumosController
  * 
  * GET /api/siente/insumos → getAll
+ * GET /api/siente/insumos/bajo-stock → getLowStock
  * GET /api/siente/insumos/{id} → getById
  * POST /api/siente/insumos → create
  * PUT /api/siente/insumos/{id} → update
@@ -24,6 +25,17 @@ class InsumosController
     public function getAll(): void
     {
         $stmt = $this->db->query('SELECT * FROM insumos ORDER BY id');
+        Response::success($stmt->fetchAll());
+    }
+
+    public function getLowStock(): void
+    {
+        $stmt = $this->db->query(
+            "SELECT * FROM insumos
+             WHERE (cantidad_minima IS NOT NULL AND cantidad_insumo_restante < cantidad_minima)
+                OR estado_insumo = 'Agregar más insumos'
+             ORDER BY nombre_insumo"
+        );
         Response::success($stmt->fetchAll());
     }
 

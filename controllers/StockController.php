@@ -4,8 +4,9 @@
  * StockController
  * 
  * GET  /api/siente/stock → getAll
+ * GET  /api/siente/stock/bajo-stock   → getLowStock
  * POST /api/siente/stock → create (usa SP p_insertar_stock_producto_ganancias)
- * * PUT    /api/siente/stock/{id}      → update   (ajusta lote y revierte/descuenta insumos)
+ * PUT    /api/siente/stock/{id}      → update   (ajusta lote y revierte/descuenta insumos)
  * DELETE /api/siente/stock/{id}      → delete   (solo lotes con cantidad_producto = 0)
  */
 
@@ -38,6 +39,24 @@ class StockController
         $rows = $stmt->fetchAll();
 
         Response::success($rows);
+    }
+
+    public function getLowStock(): void
+    {
+        $sql = '
+            SELECT
+                p.id,
+                p.nombre_producto,
+                p.stock_producto,
+                p.stock_minimo
+            FROM productos p
+            WHERE p.stock_minimo IS NOT NULL
+              AND p.stock_producto < p.stock_minimo
+            ORDER BY p.nombre_producto
+        ';
+
+        $stmt = $this->db->query($sql);
+        Response::success($stmt->fetchAll());
     }
 
     public function create(): void

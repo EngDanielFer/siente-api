@@ -105,6 +105,12 @@ if ($modulo === 'siente') {
                 } else {
                     Response::methodNotAllowed();
                 }
+            } elseif ($id === 'bajo-stock') {
+                if ($method === "GET") {
+                    $ctrl->getLowStock();
+                } else {
+                    Response::methodNotAllowed();
+                }
             } else {
                 if ($method === 'GET') {
                     $ctrl->getById((int)$id);
@@ -182,6 +188,12 @@ if ($modulo === 'siente') {
                     $ctrl->create();
                 } else {
                     Response::methodNotAllowed();
+                }
+            } elseif ($id ==='baho-stock') {
+                if ($method === 'GET') {
+                    $ctrl->getLowStock();
+                } else {
+                    Response::methodNotAllowed()
                 }
             } elseif (is_numeric($id)) {
                 if ($method === 'PUT') {
