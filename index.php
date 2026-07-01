@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 define('BASE_PATH', str_replace('\\', '/', __DIR__));
 
+require_once __DIR__ . '/helpers/Timezone.php';
 require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/helpers/Response.php';
 require_once __DIR__ . '/middleware/AuthMiddleware.php';

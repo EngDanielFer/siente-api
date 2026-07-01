@@ -35,6 +35,7 @@ class Database
 
             try {
                 self::$instance = new PDO($dsn, $user, $pass, $options);
+                Timezone::apply(self::$instance);
             } catch (PDOException $e) {
                 // http_response_code(500);
                 // echo json_encode(['mensaje' => 'Error de conexión a la base de datos: ' . $e->getMessage()]);
