@@ -90,6 +90,9 @@ class ProductosController
             'precio_por_mayor' => (float)$producto['precio_por_mayor'],
             'precio_detal' => (float)$producto['precio_detal'],
             'stock_producto' => (int)$producto['stock_producto'],
+            'stock_minimo' => isset($producto['stock_minimo']) && $producto['stock_minimo'] !== null
+                ?(int)$producto['stock_minimo']
+                : null,
             'imagen_producto' => $producto['imagen_producto']
                 ? base64_encode($producto['imagen_producto']) : null,
             'insumos' => $insumos,
@@ -151,6 +154,7 @@ class ProductosController
         }
 
         $this->ejecutarSpProducto($body);
+        $this->guardarStockMinimo((int)$id, $body['stock_minimo'] ?? null);
         Response::created(['mensaje' => 'Producto creado exitosamente']);
     }
 
@@ -161,6 +165,8 @@ class ProductosController
         $body['id'] = $id; // forzar el ID del path
 
         $this->ejecutarSpProducto($body);
+
+        $this->guardarStockMinimo((int)$id, $body['stock_minimo'] ?? null);
         Response::success(['mensaje' => 'Producto actualizado exitosamente']);
     }
 
@@ -172,6 +178,13 @@ class ProductosController
         $stmt->execute([$id]);
 
         Response::success(['mensaje' => 'Producto eliminado exitosamente']);
+    }
+
+    private function guardarStockMinimo(int $id, mixed $stockMinimo) : void {
+        $valor = ($stockMinimo !== null && $stockMinimo !== '') ? (int)$stockMinimo : null;
+
+        $stmt = $this->db->prepare('UPDATE productos SET stock_minimo = ? WHERE id = ?');
+        $stmt->execute([$valor, $id]);
     }
 
     private function ejecutarSpProducto(array $body): void

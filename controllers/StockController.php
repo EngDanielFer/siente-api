@@ -29,7 +29,8 @@ class StockController
                 ps.cantidad_producto,
                 ps.fecha_insercion,
                 ps.id_producto,
-                p.nombre_producto
+                p.nombre_producto,
+                p.stock_minimo
             FROM productos_stock ps
             JOIN productos p ON p.id = ps.id_producto
             ORDER BY ps.fecha_insercion DESC
@@ -142,7 +143,7 @@ class StockController
 
         $stmtInsumos = $this->db->prepare(
             'SELECT ip.id_insumo, ip.cantidad_insumo AS cantidad_por_unidad,
-                    i.cantidad_insumo_restante, i.nombre_insumo
+                    i.cantidad_insumo_restante, i.nombre_insumo, i.cantidad_minima
              FROM insumos_por_producto ip
              JOIN insumos i ON i.id = ip.id_insumo
              WHERE ip.id_producto = ?'
@@ -184,8 +185,13 @@ class StockController
                 $stmtActInsumo = $this->db->prepare(
                     'UPDATE insumos
                      SET cantidad_insumo_restante = cantidad_insumo_restante - (?),
+                        fecha_actualizacion = NOW(),
                          estado_insumo = CASE
-                             WHEN (cantidad_insumo_restante - (?)) <= (cantidad_insumo_total * 0.10)
+                             WHEN cantidad_minima IS NOT NULL
+                                  AND (cantidad_insumo_restante - ?) <= cantidad_minima
+                                  THEN \'Agregar más insumos\'
+                             WHEN cantidad_minima IS NULL
+                                  AND (cantidad_insumo_restante - ?) <= (cantidad_insumo_total * 0.10)
                                   THEN \'Agregar más insumos\'
                              ELSE \'Disponible\'
                          END
@@ -197,7 +203,8 @@ class StockController
 
                     $stmtActInsumo->bindValue(1, $ajuste);
                     $stmtActInsumo->bindValue(2, $ajuste);
-                    $stmtActInsumo->bindValue(3, (int)$insumo['id_insumo'], PDO::PARAM_INT);
+                    $stmtActInsumo->bindValue(3, $ajuste);
+                    $stmtActInsumo->bindValue(4, (int)$insumo['id_insumo'], PDO::PARAM_INT);
                     $stmtActInsumo->execute();
                 }
             }

@@ -32,8 +32,7 @@ class InsumosController
     {
         $stmt = $this->db->query(
             "SELECT * FROM insumos
-             WHERE (cantidad_minima IS NOT NULL AND cantidad_insumo_restante < cantidad_minima)
-                OR estado_insumo = 'Agregar más insumos'
+             WHERE cantidad_minima IS NOT NULL AND cantidad_insumo_restante <= cantidad_minima
              ORDER BY nombre_insumo"
         );
         Response::success($stmt->fetchAll());
@@ -58,17 +57,25 @@ class InsumosController
         $cantidadTotal = $body['cantidad_insumo_total'] ?? null;
         $cantidadRestante = $body['cantidad_insumo_restante'] ?? $cantidadTotal;
         $precioInsumo = $body['precio_insumo'] ?? null;
+        $cantidadMinima = isset($body['cantidad_minima']) && $body['cantidad_minima'] !== ''
+            ? (float)$body['cantidad_minima']
+            : null;
 
         $precioPorGMl = $body['precio_por_g_ml'] ?? null;
         if ($precioPorGMl === null && $precioInsumo !== null && $cantidadTotal > 0) {
             $precioPorGMl = $precioInsumo / $cantidadTotal;
         }
 
+        if ($cantidadMinima !== null && (float)$cantidadRestante <= $cantidadMinima) {
+            $estado = 'Agregar más insumos';
+        }
+
         $stmt = $this->db->prepare(
             'INSERT INTO insumos
              (nombre_insumo, cantidad_insumo_total, cantidad_insumo_restante,
-              proveedor_insumo, precio_insumo, precio_por_g_ml, estado_insumo)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+              proveedor_insumo, precio_insumo, precio_por_g_ml, estado_insumo,
+              cantidad_minima, fecha_actualizacion)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
         );
         $stmt->execute([
             $body['nombre_insumo'] ?? null,
@@ -78,6 +85,7 @@ class InsumosController
             $precioInsumo,
             $precioPorGMl,
             $estado,
+            $cantidadMinima,
         ]);
 
         $id = (int)$this->db->lastInsertId();
@@ -101,6 +109,12 @@ class InsumosController
             $insumo['estado_insumo'] = $body['estado_insumo'];
         }
 
+        if (array_key_exists('cantidad_minima', $body)) {
+            $insumo['cantidad_minima'] = ($body['cantidad_minima'] !== null && $body['cantidad_minima'] !== '')
+                ? (float)$body['cantidad_minima']
+                : null;
+        }
+
         $cantidadCambio = isset($body['cantidad_insumo_total'])
             && (float)$body['cantidad_insumo_total'] >= 0;
 
@@ -109,7 +123,7 @@ class InsumosController
         }
 
         if (isset($body['cantidad_insumo_restante']) && (float)$body['cantidad_insumo_restante'] >= 0) {
-            $insumo['cantidad_insumo_restante'] = (float)$insumo['cantidad_insumo_total'];
+            $insumo['cantidad_insumo_restante'] = (float)$body['cantidad_insumo_restante'];
         }
 
         $precioCambio = isset($body['precio_insumo']) && (float)$body['precio_insumo'] > 0;
@@ -126,13 +140,24 @@ class InsumosController
                 $insumo['precio_por_g_ml'] = $insumo['precio_insumo'] / $cantidad;
             }
         } elseif ($cantidadCambio) {
-            $insumo['precio_insumo'] = (float)$insumo['precio_por_g_ml'] = (float)$insumo['cantidad_insumo_total'];
+            $insumo['precio_insumo'] = (float)$insumo['precio_por_g_ml'] * (float)$insumo['cantidad_insumo_total'];
         }
+
+        $cantidadMinima = $insumo['cantidad_minima'] ?? null;
+        $cantidadRestante = (float)($insumo['cantidad_insumo_restante'] ?? 0);
+
+        if ($cantidadMinima !== null && $cantidadRestante <= (float)$cantidadMinima) {
+            $insumo['estado_insumo'] = 'Agregar más insumos';
+        } elseif ($insumo['estado_insumo'] === 'Agregar más insumos') {
+            $insumo['estado_insumo'] = 'Disponible';
+        }
+        
 
         $stmt = $this->db->prepare(
             'UPDATE insumos SET
              nombre_insumo = ?, cantidad_insumo_total = ?, cantidad_insumo_restante = ?,
-             proveedor_insumo = ?, precio_insumo = ?, precio_por_g_ml = ?, estado_insumo = ?
+             proveedor_insumo = ?, precio_insumo = ?, precio_por_g_ml = ?, estado_insumo = ?,
+             cantidad_minima = ?, fecha_actualizacion = NOW()
              WHERE id = ?'
         );
         $stmt->execute([
@@ -143,6 +168,7 @@ class InsumosController
             $insumo['precio_insumo'],
             $insumo['precio_por_g_ml'],
             $insumo['estado_insumo'],
+            $insumo['cantidad_minima'],
             $id,
         ]);
 
