@@ -225,7 +225,7 @@ class StockController
                 $stmtActLote->execute([$nuevaCantidadLote, (int)$lote['id_producto_stock']]);
 
                 $stmtGan = $this->db->prepare(
-                    'SELECT id_ganancia, precio_insumos_total, ganancia_total, precio_total, cantidad_producto_stock
+                    'SELECT id_ganancia, precio_insumos_total, ganancia_total, precio_total
                      FROM ganancias_productos
                      WHERE id_producto_stock = ?
                      LIMIT 1'
