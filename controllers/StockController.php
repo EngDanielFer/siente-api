@@ -319,6 +319,11 @@ class StockController
             $restante -= $aDescontar;
         }
 
+        $stmtProd = $db->prepare(
+            'UPDATE productos SET stock_producto = stock_producto - ? WHERE id = ?'
+        );
+        $stmtProd->execute([$cantidad, $idProducto]);
+
         return true;
     }
 }
