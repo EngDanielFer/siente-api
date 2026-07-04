@@ -181,7 +181,7 @@ class StockController
         try {
             $this->db->beginTransaction();
 
-            if (!empty($insumos)) {
+            if ($cantidadProducto !== 0 && !empty($insumos)) {
                 $stmtActInsumo = $this->db->prepare(
                     'UPDATE insumos
                      SET cantidad_insumo_restante = cantidad_insumo_restante - (?),

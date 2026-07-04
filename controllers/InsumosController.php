@@ -181,8 +181,22 @@ class InsumosController
     {
         $this->findOrFail($id);
 
-        $stmt = $this->db->prepare('DELETE FROM insumos WHERE id = ?');
-        $stmt->execute([$id]);
+        try {
+            $this->db->beginTransaction();
+ 
+            // 1. Eliminar referencias en insumos_por_producto
+            $stmt = $this->db->prepare('DELETE FROM insumos_por_producto WHERE id_insumo = ?');
+            $stmt->execute([$id]);
+ 
+            // 2. Eliminar el insumo
+            $stmt = $this->db->prepare('DELETE FROM insumos WHERE id = ?');
+            $stmt->execute([$id]);
+ 
+            $this->db->commit();
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            Response::serverError('Error al eliminar el insumo: ' . $e->getMessage());
+        }
 
         Response::success(['mensaje' => 'Insumo eliminado correctamente']);
     }

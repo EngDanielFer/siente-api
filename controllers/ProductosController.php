@@ -173,9 +173,34 @@ class ProductosController
     public function delete(int $id): void
     {
         $this->findOrFail($id);
+        
+        try {
+            $this->db->beginTransaction();
 
-        $stmt = $this->db->prepare('DELETE FROM productos WHERE id = ?');
-        $stmt->execute([$id]);
+            $stmt = $this->db->prepare(
+                'DELETE gp FROM ganancias_productos gp
+                 JOIN productos_stock ps ON ps.id_producto_stock = gp.id_producto_stock
+                 WHERE ps.id_producto = ?'
+            );
+            $stmt->execute([$id]);
+
+            $stmt = $this->db->prepare('DELETE FROM productos_stock WHERE id_producto = ?');
+            $stmt->execute([$id]);
+
+            $stmt = $this->db->prepare('DELETE FROM insumos_por_producto WHERE id_producto = ?');
+            $stmt->execute([$id]);
+
+            $stmt = $this->db->prepare('DELETE FROM costos_fijos_productos WHERE id_producto = ?');
+            $stmt->execute([$id]);
+
+            $stmt = $this->db->prepare('DELETE FROM productos WHERE id = ?');
+            $stmt->execute([$id]);
+
+            $this->db->commit();
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            Response::serverError('Error al eliminar el producto: ' . $e->getMessage());
+        }
 
         Response::success(['mensaje' => 'Producto eliminado exitosamente']);
     }
