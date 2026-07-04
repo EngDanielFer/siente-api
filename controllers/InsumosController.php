@@ -116,13 +116,15 @@ class InsumosController
         }
 
         $cantidadCambio = isset($body['cantidad_insumo_total'])
+            && is_numeric($body['cantidad_insumo_total'])
             && (float)$body['cantidad_insumo_total'] >= 0;
 
         if ($cantidadCambio) {
-            $insumo['cantidad_insumo_total'] = (float)$body['cantidad_insumo_total'];
-        }
+            $nuevoTotal = (float)$body['cantidad_insumo_total'];
 
-        if (isset($body['cantidad_insumo_restante']) && (float)$body['cantidad_insumo_restante'] >= 0) {
+            $insumo['cantidad_insumo_total'] = $nuevoTotal;
+            $insumo['cantidad_insumo_restante'] = $nuevoTotal;
+        } elseif (isset($body['cantidad_insumo_restante']) && (float)$body['cantidad_insumo_restante'] >= 0) {
             $insumo['cantidad_insumo_restante'] = (float)$body['cantidad_insumo_restante'];
         }
 
