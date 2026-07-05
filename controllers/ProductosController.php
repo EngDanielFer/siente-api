@@ -60,8 +60,9 @@ class ProductosController
 
         // Insumos por producto
         $stmt = $this->db->prepare(
-            'SELECT ip.id_insumo, ip.cantidad_insumo AS cantidad
+            'SELECT ip.id_insumo, i.nombre_insumo, ip.cantidad_insumo AS cantidad
              FROM insumos_por_producto ip
+             JOIN insumos i ON i.id = ip.id_insumo
              WHERE ip.id_producto = ?'
         );
         $stmt->execute([$id]);
@@ -69,6 +70,7 @@ class ProductosController
 
         $insumos = array_map(fn($r) => [
             'id_insumo' => (int)$r['id_insumo'],
+            'nombre_insumo' => $r['nombre_insumo'],
             'cantidad' => (float)$r['cantidad'],
         ], $insumosRaw);
 
