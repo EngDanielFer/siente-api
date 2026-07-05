@@ -181,7 +181,7 @@ class StockController
         try {
             $this->db->beginTransaction();
 
-            if ($cantidadProducto !== 0 && !empty($insumos)) {
+            if ($diferencia > 0 && !empty($insumos)) {
                 $stmtActInsumo = $this->db->prepare(
                     'UPDATE insumos
                      SET cantidad_insumo_restante = cantidad_insumo_restante - (?),
@@ -214,7 +214,12 @@ class StockController
             );
             $stmtActStock->execute([$cantidadProducto, $idProducto]);
 
-            if ($lote) {
+            if ($cantidadProducto === 0) {
+                $stmtAllLotes = $this->db->prepare(
+                    'UPDATE productos_stock SET cantidad_producto = 0 WHERE id_producto = ?'
+                );
+                $stmtAllLotes->execute([$idProducto]);
+            } elseif ($diferencia > 0 && $lote) {
                 $nuevaCantidadLote = (int)$lote['cantidad_producto'] + $diferencia;
                 if ($nuevaCantidadLote < 0) {
                     $nuevaCantidadLote = 0;
@@ -223,16 +228,33 @@ class StockController
                     'UPDATE productos_stock SET cantidad_producto = ? WHERE id_producto_stock = ?'
                 );
                 $stmtActLote->execute([$nuevaCantidadLote, (int)$lote['id_producto_stock']]);
-
-                $stmtGan = $this->db->prepare(
-                    'SELECT id_ganancia, precio_insumos_total, ganancia_total, precio_total
-                     FROM ganancias_productos
-                     WHERE id_producto_stock = ?
-                     LIMIT 1'
+            } elseif ($diferencia < 0) {
+                $stmtTodosLotes = $this->db->prepare(
+                    'SELECT id_producto_stock, cantidad_producto
+                     FROM productos_stock
+                     WHERE id_producto = ? AND cantidad_producto > 0
+                     ORDER BY fecha_insercion ASC'
                 );
 
-                $stmtGan->execute([(int)$lote['id_producto_stock']]);
-                
+                $stmtTodosLotes->execute([$idProducto]);
+                $todosLotes = $stmtTodosLotes->fetchAll();
+
+                $porDescontar = abs($diferencia);
+                $stmtActLote = $this->db->prepare(
+                    'UPDATE productos_stock SET cantidad_producto = ? WHERE id_producto_stock = ?'
+                );
+
+                foreach ($todosLotes as $l) {
+                    if ($porDescontar <= 0) break;
+ 
+                    $enEsteLote = (int)$l['cantidad_producto'];
+                    $quitar = min($enEsteLote, $porDescontar);
+                    $stmtActLote->execute([
+                        $enEsteLote - $quitar,
+                        (int)$l['id_producto_stock']
+                    ]);
+                    $porDescontar -= $quitar;
+                }
             }
 
             $this->db->commit();
