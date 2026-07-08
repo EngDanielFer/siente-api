@@ -152,17 +152,31 @@ class StockController
         $insumos = $stmtInsumos->fetchAll();
 
         if ($diferencia > 0 && !empty($insumos)) {
+            $insumosInsuficientes = [];
+            
             foreach ($insumos as $insumo) {
                 $cantidadNecesaria = (float)$insumo['cantidad_por_unidad'] * $diferencia;
                 $cantidadDisponible = (float)$insumo['cantidad_insumo_restante'];
 
                 if ($cantidadDisponible < $cantidadNecesaria) {
-                    Response::json([
-                        'mensaje' => "Insumos insuficientes para realizar el ajuste",
-                        'detalle' => "El insumo '{$insumo['nombre_insumo']}' requiere {$cantidadNecesaria} "
-                            . "pero solo hay {$cantidadDisponible} disponibles"
-                    ], 422);
+                    $insumosInsuficientes[] = [
+                        'nombre_insumo' => $insumo['nombre_insumo'],
+                        'cantidad_por_unidad' => (float)$insumo['cantidad_por_unidad'],
+                        'cantidad_necesaria' => $cantidadNecesaria,
+                        'cantidad_disponible' => $cantidadDisponible,
+                        'cantidad_faltante' => $cantidadNecesaria - $cantidadDisponible,
+                        'cantidad_minima' => $insumo['cantidad_minima'] !== null
+                            ? (float)$insumo['cantidad_minima']
+                            : null,
+                    ];
                 }
+            }
+
+            if (!empty($insumosInsuficientes)) {
+                Response::json([
+                    'mensaje' => 'Insumos insuficientes para realizar el ajuste',
+                    'insumos' => $insumosInsuficientes,
+                ], 422);
             }
         }
 
@@ -246,7 +260,7 @@ class StockController
 
                 foreach ($todosLotes as $l) {
                     if ($porDescontar <= 0) break;
- 
+
                     $enEsteLote = (int)$l['cantidad_producto'];
                     $quitar = min($enEsteLote, $porDescontar);
                     $stmtActLote->execute([
