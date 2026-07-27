@@ -242,6 +242,12 @@ class StockController
                     'UPDATE productos_stock SET cantidad_producto = ? WHERE id_producto_stock = ?'
                 );
                 $stmtActLote->execute([$nuevaCantidadLote, (int)$lote['id_producto_stock']]);
+            } elseif ($diferencia > 0 && !$lote){
+                $stmtNuevoLote = $this->db->prepare(
+                    'INSERT INTO productos_stock (id_producto, cantidad_producto, fecha_insercion)
+                     VALUES (?, ?, NOW())'
+                );
+                $stmtNuevoLote->execute([$idProducto, $diferencia]);
             } elseif ($diferencia < 0) {
                 $stmtTodosLotes = $this->db->prepare(
                     'SELECT id_producto_stock, cantidad_producto
