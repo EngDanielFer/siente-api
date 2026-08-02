@@ -169,7 +169,13 @@ class FacturasController
                 Response::serverError('El procedimiento no retornó un ID de factura');
             }
         } catch (PDOException $e) {
-            Response::serverError('Error al crear la factura: ' . $e->getMessage());
+            $mensaje = $this->limpiarMensajeSql($e->getMessage());
+
+            if ($e->getCode() === '45000') {
+                Response::error($mensaje, 422);
+            }
+
+            Response::serverError('Error al crear la factura: ' . $mensaje);
         }
 
 
@@ -186,6 +192,15 @@ class FacturasController
             'valor_pagado' => $factura['valor_pagado'] ?? null,
             'precio_envio' => $factura['precio_envio'] ?? null,
         ]);
+    }
+
+    private function limpiarMensajeSql(string $mensaje): string
+    {
+        if (preg_match('/:\s*\d+\s+(.*)$/s', $mensaje, $m)) {
+            return trim($m[1]);
+        }
+
+        return $mensaje;
     }
 
     public function delete(int $id): void
